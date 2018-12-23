@@ -53,7 +53,7 @@ class ProcServiceProvider {
         return res.status(400).json({error});
       }
 
-      return this.execProcess(username, name, cmd)
+      return this.execProcess(username, name, cmd, args || [])
         .then(result => res.json(result))
         .catch(error => res.status(500).json({error}));
     });
@@ -78,7 +78,7 @@ class ProcServiceProvider {
   start() {
   }
 
-  execProcess(username, name, cmd, ...args) {
+  execProcess(username, name, cmd, args) {
     return new Promise((resolve, reject) => {
       let stdout = '';
       let stderr = '';
@@ -95,7 +95,7 @@ class ProcServiceProvider {
     });
   }
 
-  spawnProcess(username, name, cmd, ...args) {
+  spawnProcess(username, name, cmd, args) {
     try {
       const p = spawn(cmd, args);
       const emit = (type, ...data) => this.broadcastMessage(username, name, type, ...data);
@@ -105,6 +105,7 @@ class ProcServiceProvider {
       p.stdout.on('data', data => emit('stdout', data.toString()));
       p.stderr.on('data', data => emit('stderr', data.toString()));
 
+      p.on('error', error => emit('error', error));
       p.on('exit', code => {
         this.removeProcess(name);
         emit('exit', code);

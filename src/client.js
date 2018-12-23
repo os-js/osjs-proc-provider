@@ -8,7 +8,18 @@ class SpawnedProcess extends EventEmitter {
     this.service = service;
     this.cmd = cmd;
     this.args = args;
-    this.name = name;
+    this.destroyed = false;
+
+    this.once('error', () => this.destroy());
+    this.once('exit', () => this.destroy());
+  }
+
+  destroy() {
+    if (!this.destroyed) {
+      this.destroyed = true;
+
+      this.emit('destroy');
+    }
   }
 
   kill() {
@@ -28,7 +39,7 @@ class ProcService extends EventEmitter {
       const {name, type} = options;
       const found = this.processes.find(iter => iter.name === name);
 
-      if (found) {
+      if (found && !found.destroyed) {
         found.emit(type, ...args);
       }
     });
@@ -52,7 +63,7 @@ class ProcService extends EventEmitter {
     const name = uuid();
     const proc = new SpawnedProcess(this, cmd, args, name);
 
-    proc.on('exit', () => {
+    proc.on('destroy', () => {
       const foundIndex = this.processes.findIndex(iter => iter.name === name);
       if (foundIndex !== -1) {
         this.processes.splice(foundIndex, 1);
