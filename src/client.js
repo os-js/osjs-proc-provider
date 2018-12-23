@@ -45,7 +45,7 @@ class ProcService extends EventEmitter {
     return this.core.request(endpoint, {
       method: 'POST',
       body
-    }, 'json')
+    }, 'json');
   }
 
   spawn(cmd, args = []) {

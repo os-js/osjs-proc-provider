@@ -1,4 +1,3 @@
-const {EventEmitter} = require('@osjs/event-emitter');
 const {spawn} = require('child_process');
 
 class ProcServiceProvider {
@@ -26,7 +25,7 @@ class ProcServiceProvider {
   init() {
     const {routeAuthenticated} = this.core.make('osjs/express');
 
-    const checkParameters = (name, cmd) => {
+    const checkParameters = (name, cmd) => {
       if (!name) {
         return 'No name given';
       }
