@@ -4,7 +4,9 @@ class ProcServiceProvider {
 
   constructor(core, options = {}) {
     this.core = core;
-    this.options = options;
+    this.options = Object.assign({
+      groups: ['admin']
+    }, options);
     this.processes = [];
   }
 
@@ -42,7 +44,7 @@ class ProcServiceProvider {
       const {name} = req.body;
       const status = this.removeProcess(name);
       return res.json(status);
-    });
+    }, this.options.groups);
 
     routeAuthenticated('POST', '/proc/exec', (req, res) => {
       const {name, cmd, args} = req.body;
@@ -56,7 +58,7 @@ class ProcServiceProvider {
       return this.execProcess(username, name, cmd, args || [])
         .then(result => res.json(result))
         .catch(error => res.status(500).json({error}));
-    });
+    }, this.options.groups);
 
     routeAuthenticated('POST', '/proc/spawn', (req, res) => {
       const {name, cmd, args} = req.body;
@@ -70,7 +72,7 @@ class ProcServiceProvider {
       return this.spawnProcess(username, name, cmd, args || [])
         .then(result => res.json(result))
         .catch(error => res.status(500).json(false));
-    }, ['admin']);
+    }, this.options.groups);
 
     return Promise.resolve();
   }

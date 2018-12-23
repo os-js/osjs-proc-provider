@@ -15,6 +15,10 @@ Adds support for spawning and listening in on processes on the node server.
 
 ## Installation
 
+```
+npm install --save --production @osjs/proc-provider
+```
+
 In your initialization scripts:
 
 ```javascript
@@ -25,6 +29,22 @@ core.register(ProcServiceProvider);
 // Server
 const {ProcServiceProvider} = require('@osjs/proc-provider/src/server.js');
 core.register(ProcServiceProvider);
+```
+
+## Configuration
+
+By default the server provider is set up to only allow users with the `admin` group to access this feature.
+
+You can change this by adding options:
+
+```javascript
+
+const {ProcServiceProvider} = require('@osjs/proc-provider/src/server.js');
+core.register(ProcServiceProvider, {
+  args: {
+    groups: ['other-group']
+  }
+});
 ```
 
 ## Client Example
