@@ -90,6 +90,7 @@ class ProcServiceProvider {
 
         p.stdout.on('data', data => (stdout += data.toString()));
         p.stderr.on('data', data => (stderr += data.toString()));
+        p.on('error', error => reject(error));
         p.on('exit', code => resolve({code, stdout, stderr}));
       } catch (e) {
         reject(e);
