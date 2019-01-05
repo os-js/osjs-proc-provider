@@ -15,7 +15,7 @@ Adds support for spawning and listening in on processes on the node server.
 
 ## Installation
 
-```
+```bash
 npm install --save --production @osjs/proc-provider
 ```
 
@@ -38,7 +38,6 @@ By default the server provider is set up to only allow users with the `admin` gr
 You can change this by adding options:
 
 ```javascript
-
 const {ProcServiceProvider} = require('@osjs/proc-provider/src/server.js');
 core.register(ProcServiceProvider, {
   args: {
@@ -65,7 +64,6 @@ core.make('osjs/proc')
     // You can kill long running processes
     p.kill();
   })
-
 ```
 
 ```javascript
@@ -76,4 +74,4 @@ core.make('osjs/proc')
 
 ## TODO
 
-* Implement `child.stdin.write` over WS
+- [ ] Implement `child.stdin.write` over WS
