@@ -1,6 +1,6 @@
 {
   "name": "@osjs/proc-provider",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "OS.js v3 Proc Provider",
   "main": "dist/main.js",
   "scripts": {
