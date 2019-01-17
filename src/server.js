@@ -1,5 +1,9 @@
 const {spawn} = require('child_process');
 
+const unpackCmd = cmd => typeof cmd === 'string'
+  ? {cmd, env: {}}
+  : cmd;
+
 class ProcServiceProvider {
 
   constructor(core, options = {}) {
@@ -80,13 +84,15 @@ class ProcServiceProvider {
   start() {
   }
 
-  execProcess(username, name, cmd, args) {
+  execProcess(username, name, command, args) {
+    const {cmd, env} = unpackCmd(command);
+
     return new Promise((resolve, reject) => {
       let stdout = '';
       let stderr = '';
 
       try {
-        const p = spawn(cmd, args);
+        const p = spawn(cmd, args, {env});
 
         p.stdout.on('data', data => (stdout += data.toString()));
         p.stderr.on('data', data => (stderr += data.toString()));
@@ -98,9 +104,11 @@ class ProcServiceProvider {
     });
   }
 
-  spawnProcess(username, name, cmd, args) {
+  spawnProcess(username, name, command, args) {
+    const {cmd, env} = unpackCmd(command);
+
     try {
-      const p = spawn(cmd, args);
+      const p = spawn(cmd, args, {env});
       const emit = (type, ...data) => this.broadcastMessage(username, name, type, ...data);
 
       this.processes.push({p, name});
