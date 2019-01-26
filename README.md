@@ -14,7 +14,9 @@
 
 # OS.js v3 Proc Service Provider
 
-Adds support for spawning and listening in on processes on the node server.
+Adds support for spawning and piping processes and pseudo terminals on the node server.
+
+Communicates via the internal websocket.
 
 ## Installation
 
@@ -49,7 +51,49 @@ core.register(ProcServiceProvider, {
 });
 ```
 
-## Client Example
+## API
+
+You can reach this service with `core.make('osjs/proc')`.
+
+* `pty(cmd, ...args) => Promise<p, Error>` - Creates a new pseudo terminal over websocket
+* `spawn(cmd, ...args) => Promise<p, Error>` - Spawns a new process over websocket
+* `exec(cmd, ...args) => Promise<{code, stdout, stderr}, Error>` - Execs a process over http
+
+The `cmd` can either be a string, or an object: `{cmd: string, env: {A: 'value'}}`.
+
+The `p` returned in a promise resolution is an `EventEmitter` with some special methods for interacting with the process.
+
+### Pseudo terminal over websocket
+
+Execute a process, but inside a PTY. This makes it possible to use interactive processes.
+
+*Note that it is not possible to differentiate between stdout and stderr in this case.*
+
+```javascript
+core.make('osjs/proc')
+  .pty('ls')
+  .then(p => {
+    // Process events
+    p.on('data', str => console.log(str))
+    p.on('exit', code => console.info(code))
+
+    // Internal events
+    p.on('spawned', () => {}); // Spawn successful
+    p.on('error', error => console.error(error)); // Spawn errors
+
+    // Send data to the shell
+    p.send('Hello World\n');
+
+    // You can kill long running processes
+    p.kill();
+  })
+```
+
+### Execute over websocket
+
+Execute a process via standard node child_process.
+
+*Note that processes that requires an interactive shell won't work here. See PTY above.*
 
 ```javascript
 core.make('osjs/proc')
@@ -69,24 +113,39 @@ core.make('osjs/proc')
   })
 ```
 
+### Execute over http
+
+Directly execute a program via child_process and return the result.
+
 ```javascript
 core.make('osjs/proc')
   .exec('ls')
-  .then({stdout, stderr, code} => console.log(stdout, stderr, code))
+  .then(({stdout, stderr, code}) => console.log(stdout, stderr, code))
 ```
+
+### Passing environmental variables
+
+You can also pass environmental data to all methods.
 
 ```javascript
-// Pass environmental variables
 core.make('osjs/proc')
-  .spawn({cmd: 'ls', env: {foo: 'bar'}})
-
-core.make('osjs/proc')
-  .exec({cmd: 'ls', env: {foo: 'bar'}})
+  .spawn({cmd: 'ls', env: {foo: 'bar'}}) // Works for all methods
 ```
+
+## Features
+
+- Launch processes via websocket (pipeable)
+- Launch pseudo terminals via websocket (pipeable)
+- Launch process via http
+- Support for manually killing a running process
+- Server clears out stale processes (ex when client disconnects)
+- Works on all platforms
 
 ## TODO
 
-- [ ] Implement `child.stdin.write` over WS
+- [ ] Add option for spawning standalone socket
+- [ ] Move the HTTP API purely to websocket signals ?
+- [ ] Add a system socket and host service
 
 ## Contribution
 
