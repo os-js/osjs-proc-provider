@@ -1,5 +1,9 @@
 import * as uuid from 'uuid/v4';
 import {EventEmitter} from '@osjs/event-emitter';
+import {Terminal} from 'xterm';
+import * as fit from 'xterm/lib/addons/fit/fit';
+import * as attach from 'xterm/lib/addons/attach/attach';
+import './styles.scss';
 
 const PING_INTERVAL = 10 * 1000;
 
@@ -12,12 +16,15 @@ class SpawnedProcess extends EventEmitter {
     this.args = args;
     this.destroyed = false;
     this.pingInterval = null;
+    this.win = null;
 
-    this.once('error', () => this.destroy());
-    this.once('exit', () => this.destroy());
+    // this.once('error', () => this.destroy(false));
+    this.once('exit', () => this.destroy(false));
+
     this.once('spawned', () => {
       this.pingInterval = setInterval(() => this.ping(), PING_INTERVAL);
     });
+
     this.on('destroy', () => {
       this.pingInterval = clearInterval(this.pingInterval);
     });
@@ -49,6 +56,76 @@ class SpawnedProcess extends EventEmitter {
     if (!this.destroyed) {
       this.service.ping(this.name);
     }
+  }
+
+  createWindow(options = {}) {
+    options = Object.assign({
+      keepOpen: false,
+      focus: true,
+      closeable: false
+    }, options);
+
+    if (this.win) {
+      this.win.focus(true);
+    } else {
+      this.win = this.service.core
+        .make('osjs/window', {
+          title: [this.cmd, ...this.args].join(' '),
+          position: 'center',
+          attributes: {
+            classNames: ['osjs-proc-window'],
+            closeable: options.closeable
+          },
+          dimension: {
+            width: 800,
+            height: 300
+          }
+        })
+        .render(($content, win) => {
+          const xterm = new Terminal();
+          xterm.open($content);
+
+          xterm.on('data', data => this.send(data));
+
+          win.on('close', () => this.destroy(true));
+          win.on('resized', () => xterm.fit());
+          win.on('focus', () => xterm.focus());
+          win.on('blur', () => xterm.blur());
+          win.on('destroy', () => xterm.destroy());
+          win.on('destroy', () => (this.win = null));
+          win.on('render', win => {
+            setTimeout(() => {
+              if (options.focus) {
+                win.focus();
+              }
+
+              xterm.fit();
+            }, 1);
+          });
+
+          this.on('exit', code => {
+            xterm.writeln(`Process exited with code ${code}`);
+          });
+
+          this.on('error', error => {
+            if (error.code === 'EIO') {
+              return;
+            }
+
+            xterm.writeln(`PTY Error: ${JSON.stringify(error)}`);
+          });
+
+          this.on('stdout', d => xterm.write(d));
+          this.on('stderr', d => xterm.write(d));
+          this.on('data', d => xterm.write(d));
+
+          if (!options.keepOpen) {
+            this.on('destroy', () => win.destroy());
+          }
+        });
+    }
+
+    return this.win;
   }
 }
 
@@ -141,6 +218,9 @@ export class ProcServiceProvider extends EventEmitter {
     this.core = core;
     this.options = options;
     this.service = null;
+
+    Terminal.applyAddon(fit);
+    Terminal.applyAddon(attach);
   }
 
   destroy() {
@@ -149,7 +229,7 @@ export class ProcServiceProvider extends EventEmitter {
 
   provides() {
     return [
-      'osjs/proc'
+      'osjs/proc',
     ];
   }
 

@@ -150,7 +150,8 @@ class ProcServiceProvider {
   spawnPty(username, name, command, args) {
     try {
       const {cmd, env, rows, cols, term} = unpackCmd(command);
-      const p = pty.spawn(SHELL, [cmd, ...args], {
+      // FIXME: Powershell won't work with this
+      const p = pty.spawn(SHELL, ['-c', [cmd, ...args].join(' ')], {
         name: term || 'xterm-color',
         cols: cols || 80,
         rows: rows || 30,

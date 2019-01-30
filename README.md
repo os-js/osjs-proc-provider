@@ -27,11 +27,14 @@ npm install --save --production @osjs/proc-provider
 In your initialization scripts:
 
 ```javascript
-// Client
+// Client index.js file
 import {ProcServiceProvider} from '@osjs/proc-provider';
 core.register(ProcServiceProvider);
 
-// Server
+// Client index.scss file
+@import "~@osjs/proc-provider/dist/main.css";
+
+// Server index.js file
 const {ProcServiceProvider} = require('@osjs/proc-provider/src/server.js');
 core.register(ProcServiceProvider);
 ```
@@ -146,6 +149,7 @@ core.make('osjs/proc')
 - [ ] Add option for spawning standalone socket
 - [ ] Move the HTTP API purely to websocket signals ?
 - [ ] Add a system socket and host service
+- [ ] Add `shell` method for direct PTY
 
 ## Contribution
 
