@@ -126,6 +126,13 @@ core.make('osjs/proc')
   .then(({stdout, stderr, code}) => console.log(stdout, stderr, code))
 ```
 
+### Passing arguments
+
+```javascript
+core.make('osjs/proc')
+  .spawn('ls', '-l') // Works for all methods
+```
+
 ### Passing environmental variables
 
 You can also pass environmental data to all methods.
@@ -133,6 +140,24 @@ You can also pass environmental data to all methods.
 ```javascript
 core.make('osjs/proc')
   .spawn({cmd: 'ls', env: {foo: 'bar'}}) // Works for all methods
+```
+
+### Spawning windows to monitor output
+
+For a PTY this also supports input. Just spawn a process as above, but:
+
+```javascript
+core.make('osjs/proc')
+  .pty('ls')
+  .then(p => {
+    const win = p.createWindow({
+      // Keep window open for as long as you want
+      keepOpen: false
+    })
+
+    // Close window after 2.5s when command is complete
+    p.on('exit', () => setTimeout(() => win.destroy(), 2500))
+  })
 ```
 
 ## Features
