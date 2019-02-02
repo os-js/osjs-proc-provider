@@ -29,14 +29,14 @@ In your initialization scripts:
 ```javascript
 // Client index.js file
 import {ProcServiceProvider} from '@osjs/proc-provider';
-core.register(ProcServiceProvider);
+osjs.register(ProcServiceProvider);
 
 // Client index.scss file
 @import "~@osjs/proc-provider/dist/main.css";
 
 // Server index.js file
 const {ProcServiceProvider} = require('@osjs/proc-provider/src/server.js');
-core.register(ProcServiceProvider);
+osjs.register(ProcServiceProvider);
 ```
 
 ## Configuration
@@ -47,7 +47,7 @@ You can change this by adding options:
 
 ```javascript
 const {ProcServiceProvider} = require('@osjs/proc-provider/src/server.js');
-core.register(ProcServiceProvider, {
+osjs.register(ProcServiceProvider, {
   args: {
     groups: ['other-group']
   }
