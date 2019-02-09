@@ -6,9 +6,11 @@ const SHELL = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
 const TIMEOUT_INTERVAL = 10 * 1000;
 const TIMEOUT_PING = 60 * 1000;
 
+const defaultCmd = {env: {}, cwd: null};
+
 const unpackCmd = cmd => typeof cmd === 'string'
-  ? {cmd, env: {}}
-  : cmd;
+  ? Object.assign({}, defaultCmd, {cmd})
+  : Object.assign({}, cmd);
 
 const checkParameters = (name, cmd) => {
   if (!name) {
@@ -92,14 +94,14 @@ class ProcServiceProvider {
   }
 
   execProcess(username, name, command, args) {
-    const {cmd, env} = unpackCmd(command);
+    const {cmd, env, cwd} = unpackCmd(command);
 
     return new Promise((resolve, reject) => {
       let stdout = '';
       let stderr = '';
 
       try {
-        const p = spawn(cmd, args, {env});
+        const p = spawn(cmd, args, {env, cwd, shell: true});
 
         this.processes.push({p, name});
 
@@ -138,8 +140,8 @@ class ProcServiceProvider {
 
   spawnProcess(username, name, command, args) {
     try {
-      const {cmd, env} = unpackCmd(command);
-      const p = spawn(cmd, args, {env});
+      const {cmd, env, cwd} = unpackCmd(command);
+      const p = spawn(cmd, args, {env, cwd, shell: true});
 
       return this._spawnProcess(username, name, p, false);
     } catch (e) {
