@@ -7,6 +7,27 @@ import './styles.scss';
 
 const PING_INTERVAL = 10 * 1000;
 
+const attachWindowEvents = (win, xterm, focus) => {
+  win.on('resized', () => xterm.fit());
+  if (focus) {
+    win.on('focus', () => xterm.focus());
+  }
+  win.on('blur', () => xterm.blur());
+  win.on('destroy', () => xterm.destroy());
+  win.on('render', () => xterm.fit());
+};
+
+const createBoundXterm = (win, options = {}) => {
+  const focus = options.focus === true;
+  const xterm = new Terminal(options.terminal || {});
+
+  if (win) {
+    attachWindowEvents(win, xterm, focus);
+  }
+
+  return xterm;
+};
+
 class SpawnedProcess extends EventEmitter {
   constructor(service, cmd, args, name) {
     super(name);
@@ -58,6 +79,54 @@ class SpawnedProcess extends EventEmitter {
     }
   }
 
+  _attachXterm(xterm) {
+    xterm.on('data', data => this.send(data));
+
+    this.on('exit', code => {
+      xterm.writeln(`Process exited with code ${code}`);
+    });
+
+    this.on('error', error => {
+      if (error.code === 'EIO') {
+        return;
+      }
+
+      xterm.writeln(`PTY Error: ${JSON.stringify(error)}`);
+    });
+
+    this.on('stdout', d => xterm.write(d));
+    this.on('stderr', d => xterm.write(d));
+    this.on('data', d => xterm.write(d));
+  }
+
+  _createWindowTerminal($content, win, options) {
+    const xterm = new Terminal();
+
+    this._attachXterm(xterm);
+
+    attachWindowEvents(win, xterm, {
+      focus: true
+    });
+
+    win.on('close', () => this.destroy(true));
+    win.on('destroy', () => (this.win = null));
+    win.on('render', win => {
+      if (options.focus) {
+        setTimeout(() => win.focus(), 1);
+      }
+    });
+
+    if (!options.keepOpen) {
+      this.on('destroy', () => win.destroy());
+    }
+
+    xterm.open($content);
+  }
+
+  attachXterm(xterm) {
+    return this._attachXterm(xterm);
+  }
+
   createWindow(options = {}) {
     options = Object.assign({
       keepOpen: false,
@@ -82,46 +151,11 @@ class SpawnedProcess extends EventEmitter {
           }
         })
         .render(($content, win) => {
-          const xterm = new Terminal();
-          xterm.open($content);
+          $content.classList.add('osjs-gui-xterm');
 
-          xterm.on('data', data => this.send(data));
+          this._createWindowTerminal($content, win, options);
 
-          win.on('close', () => this.destroy(true));
-          win.on('resized', () => xterm.fit());
-          win.on('focus', () => xterm.focus());
-          win.on('blur', () => xterm.blur());
-          win.on('destroy', () => xterm.destroy());
-          win.on('destroy', () => (this.win = null));
-          win.on('render', win => {
-            setTimeout(() => {
-              if (options.focus) {
-                win.focus();
-              }
-
-              xterm.fit();
-            }, 1);
-          });
-
-          this.on('exit', code => {
-            xterm.writeln(`Process exited with code ${code}`);
-          });
-
-          this.on('error', error => {
-            if (error.code === 'EIO') {
-              return;
-            }
-
-            xterm.writeln(`PTY Error: ${JSON.stringify(error)}`);
-          });
-
-          this.on('stdout', d => xterm.write(d));
-          this.on('stderr', d => xterm.write(d));
-          this.on('data', d => xterm.write(d));
-
-          if (!options.keepOpen) {
-            this.on('destroy', () => win.destroy());
-          }
+          win.emit('focus');
         });
     }
 
@@ -240,7 +274,8 @@ export class ProcServiceProvider extends EventEmitter {
       spawn: (cmd, ...args) => this.service.spawn(cmd, args),
       exec: (cmd, ...args) => this.service.exec(cmd, args),
       pty: (cmd, ...args) => this.service.pty(cmd, args),
-      kill: (name) => this.service.kill(name)
+      kill: (name) => this.service.kill(name),
+      xterm: (...args) => createBoundXterm(...args)
     }));
 
     return Promise.resolve();

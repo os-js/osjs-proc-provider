@@ -1,4 +1,10 @@
-.osjs-proc-window {
+.osjs-gui-xterm {
+  background-color: #000;
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 1;
+  overflow: hidden;
+
   .xterm.terminal {
     position: absolute;
     top: 0;

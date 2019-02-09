@@ -61,10 +61,13 @@ You can reach this service with `core.make('osjs/proc')`.
 * `pty(cmd, ...args) => Promise<p, Error>` - Creates a new pseudo terminal over websocket
 * `spawn(cmd, ...args) => Promise<p, Error>` - Spawns a new process over websocket
 * `exec(cmd, ...args) => Promise<{code, stdout, stderr}, Error>` - Execs a process over http
+* `xterm(win[, options]) => Xterm` - Creates a new [xterm.js](https://github.com/xtermjs/xterm.js) class instance and bind it to a window
 
 The `cmd` can either be a string, or an object: `{cmd: string, env: {A: 'value'}}`.
 
 The `p` returned in a promise resolution is an `EventEmitter` with some special methods for interacting with the process.
+
+*See examples below*.
 
 ### Pseudo terminal over websocket
 
@@ -158,6 +161,50 @@ core.make('osjs/proc')
     // Close window after 2.5s when command is complete
     p.on('exit', () => setTimeout(() => win.destroy(), 2500))
   })
+```
+
+### Attaching a shell via GUI
+
+You can attach an Xterm (PTY recommended) to any arbitrary DOM element.
+
+This example shows you how to use it in Hyperapp:
+
+> Note that the `xterm` reference is a [xterm.js](https://github.com/xtermjs/xterm.js) class instance. The addon `fit` has been loaded and you can specify terminal options via the second argument: `.xterm(win, {terminal: {}})`.
+
+```javascript
+import {h, app} from 'hyperapp';
+import {Box} from '@osjs/gui';
+
+// Create a custom hyperapp component
+// The CSS is included by this provider
+const XtermElement = props => h('div', {
+  class: 'osjs-gui osjs-gui-xterm',
+  oncreate: el => props.xterm.open(el),
+  onclick: () => props.xterm.focus()
+});
+
+// When you render your window, create a new Xterm reference
+// Then provide it as a reference to the component
+win.render(($content, win) => {
+  const pp = core.make('osjs/proc');
+  const xterm = pp.xterm(win);
+  const hyperapp = app({}, {
+    runPty: () => {
+      pp.pty('ls', '-l')
+        .then(p => p.attachXterm(xterm))
+        .catch(error => console.error(error));
+    }
+  }, (state, actions) => {
+    return h(Box, {
+      grow: 1,
+      shrink: 1
+    }, h(XtermElement, {xterm}));
+  }, $content);
+
+  // Execute immediately. You can call this action from a button or whatever
+  // using components
+  hyperapp.runPty();
+});
 ```
 
 ## Features
