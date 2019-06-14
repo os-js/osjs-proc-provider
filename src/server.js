@@ -208,7 +208,7 @@ class ProcServiceProvider {
   }
 
   broadcastMessage(username, name, type, ...args) {
-    this.core.broadcast(`osjs/proc-provider:stdout`, [{name, type}, ...args], client => {
+    this.core.broadcast('osjs/proc-provider:stdout', [{name, type}, ...args], client => {
       return client._osjs_client && client._osjs_client.username === username;
     });
   }
