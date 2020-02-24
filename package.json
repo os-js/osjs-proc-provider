@@ -1,7 +1,7 @@
 {
   "name": "@osjs/proc-provider",
-  "version": "1.7.1",
-  "description": "OS.js v3 Proc Provider",
+  "version": "1.7.2",
+  "description": "OS.js Proc Provider",
   "main": "dist/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
