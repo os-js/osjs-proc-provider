@@ -19,7 +19,7 @@ Communicates via the internal websocket.
 ## Installation
 
 ```bash
-npm install --save --production @osjs/proc-provider
+npm install @osjs/proc-provider
 ```
 
 In your initialization scripts:
