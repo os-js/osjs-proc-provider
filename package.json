@@ -30,7 +30,7 @@
   },
   "homepage": "https://github.com/andersevenrud/osjs-proc-provider#readme",
   "devDependencies": {
-    "@osjs/dev-meta": "^1.0.2"
+    "@osjs/dev-meta": "^1.0.3"
   },
   "dependencies": {
     "@osjs/event-emitter": "^1.0.4",
