@@ -30,12 +30,12 @@
   },
   "homepage": "https://github.com/andersevenrud/osjs-proc-provider#readme",
   "devDependencies": {
-    "@osjs/dev-meta": "^1.0.3"
+    "@osjs/dev-meta": "^1.1.1"
   },
   "dependencies": {
     "@osjs/event-emitter": "^1.0.4",
-    "node-pty": "^0.8.1",
-    "uuid": "^3.3.2",
+    "node-pty": "^0.9.0",
+    "uuid": "^8.2.0",
     "xterm": "^3.10.1"
   },
   "eslintConfig": {

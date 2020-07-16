@@ -1,4 +1,4 @@
-import * as uuid from 'uuid/v4';
+import {v4 as uuid} from 'uuid';
 import {EventEmitter} from '@osjs/event-emitter';
 import {Terminal} from 'xterm';
 import * as fit from 'xterm/lib/addons/fit/fit';
@@ -80,7 +80,7 @@ class SpawnedProcess extends EventEmitter {
   }
 
   _attachXterm(xterm) {
-    xterm.on('data', data => this.send(data));
+    xterm.onData(data => this.send(data));
 
     this.on('exit', code => {
       xterm.writeln(`Process exited with code ${code}`);
